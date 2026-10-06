@@ -1,0 +1,13 @@
+﻿# Ejecutables compilados
+*.exe
+*.o
+*.obj
+
+# Archivos temporales de prueba
+input.png
+output.png
+
+# Editores y sistema
+.vscode/
+.idea/
+Thumbs.db

@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Punto Ciego | Esteganografía</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Urbanist:wght@400;600;800&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Urbanist', sans-serif; }
+        /*Clases Candado*/
+        .forzar-cierre { stroke-dasharray: 100 !important; }
+        .forzar-apertura { stroke-dasharray: 75 !important; }
+        
+        /* Scrollbar custom para el textarea */
+        textarea::-webkit-scrollbar {
+            width: 8px;
+        }
+        textarea::-webkit-scrollbar-track {
+            background: rgba(31, 41, 55, 0.5); /* bg-gray-800 */
+            border-radius: 4px;
+        }
+        textarea::-webkit-scrollbar-thumb {
+            background: rgba(16, 185, 129, 0.6); /* emerald-500 */
+            border-radius: 4px;
+        }
+        textarea::-webkit-scrollbar-thumb:hover {
+            background: rgba(16, 185, 129, 0.9);
+        }
+    </style>
+</head>
+<body class="bg-gray-900 text-gray-100 flex items-center justify-center min-h-screen">
+    
+    <div class="bg-gray-800 p-8 rounded-2xl shadow-2xl w-full max-w-md border border-gray-700 relative">
+        
+        <button type="button" id="btnComoFunciona" class="absolute top-4 right-4 flex flex-col items-center justify-center py-1.5 px-2.5 rounded-lg bg-gray-900/60 border border-gray-600 hover:bg-gray-800 hover:border-emerald-500/60 transition-colors duration-200 group shadow-sm">
+            
+            <svg class="w-5 h-5 mb-0.5 text-emerald-500 group-hover:text-emerald-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+            
+            <span class="text-[11px] font-bold text-gray-300 group-hover:text-white transition-colors tracking-wide">
+                Como funciona
+            </span>
+        </button>
+
+        <div class="flex flex-col items-center justify-center mb-6">
+            <img src="logo.png" alt="Logo Punto Ciego" class="w-20 h-20 rounded-full mb-3 shadow-lg shadow-emerald-500/20 border-2 border-gray-700">
+            <h2 class="text-3xl font-extrabold text-center text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-indigo-400 tracking-wide">
+                Punto Ciego
+            </h2>
+            
+        </div>
+
+        <div id="errorBox" class="hidden mb-4 bg-red-900/50 border border-red-500 text-red-200 px-4 py-3 rounded-lg relative shadow-lg" role="alert">
+            <strong class="font-bold">Parece que algo salió mal </strong>
+            <span class="block sm:inline" id="errorTexto">intentalo de nuevo mas tarde.</span>
+        </div>  
+
+        <form id="stegoForm" class="space-y-5">
+            
+            <div id="dropZone" class="border-2 border-dashed border-gray-600 hover:border-emerald-500/60 rounded-lg p-6 bg-gray-900/50 text-center hover:bg-gray-800 transition-all cursor-pointer relative group">
+                
+                <input type="file" id="imagenInput" accept="image/*" required class="hidden">
+                
+                <label for="imagenInput" class="block w-full h-full cursor-pointer">
+                    <svg class="w-12 h-12 mx-auto mb-3 text-gray-400 group-hover:text-emerald-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path></svg>
+                    <span class="block text-sm font-semibold text-gray-300 group-hover:text-white transition-colors">Arrastrá tu imagen acá o hacé clic</span>
+                    <span class="block text-xs text-gray-500 mt-1">Soporta PNG, JPG, WEBP, BMP</span>
+                </label>
+
+                <p id="errorImagen" class="text-red-500 text-xs mt-3 hidden">Por favor, seleccioná una imagen.</p>
+                
+                <div id="previewContenedor" class="mt-4 hidden flex justify-center">
+                    <div class="relative inline-block border-2 border-emerald-500/30 rounded-lg p-1 bg-gray-900/80 shadow-lg">
+                        <img id="imagenPreview" src="" alt="Vista previa" class="max-h-32 rounded object-contain">
+                    </div>
+                </div>
+            </div>
+
+            <div>
+                <div class="flex items-center justify-between mb-1">
+                    <label for="mensajeInput" class="block text-sm font-semibold text-gray-300">Mensaje a ocultar</label>
+                    <span id="contadorPalabras" class="text-xs font-mono text-gray-400 hidden">0 / 0 palabras (0%)</span>
+                </div>
+                <textarea id="mensajeInput" rows="3" placeholder="Escribí tu texto acá si vas a ocultar..."
+                          class="w-full bg-gray-900/50 border border-gray-600 rounded-lg p-3 text-white focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all"></textarea>
+                
+                <div id="barraCapacidadContenedor" class="w-full bg-gray-700/60 rounded-full h-1 mt-1.5 overflow-hidden hidden">
+                    <div id="barraCapacidad" class="h-full w-0 bg-emerald-500 transition-all duration-200"></div>
+                </div>
+
+                <p id="errorMensaje" class="text-red-500 text-xs mt-1 hidden">El mensaje no puede estar vacío.</p>
+                <p id="errorCapacidad" class="text-red-500 text-xs mt-1 hidden">El mensaje supera la capacidad máxima de esta imagen.</p>
+            </div>
+
+            <div>
+                <label for="claveInput" class="block text-sm font-semibold mb-1 text-gray-300">Seleccione una contraseña </label>
+                <input type="text" id="claveInput" placeholder="Ej: GATO" required
+                       class="w-full bg-gray-900/50 border border-gray-600 rounded-lg p-3 text-white focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all">
+                <div id="seguridadContenedor" class="mt-2 hidden flex items-center justify-between">
+                    <div class="flex w-2/3 h-1.5 rounded-full bg-gray-700 overflow-hidden">
+                        <div id="barraSeguridad" class="h-full w-0 transition-all duration-300 ease-out"></div>
+                    </div>
+                    <span id="textoSeguridad" class="text-xs font-bold ml-3 tracking-wide"></span>
+                </div>
+                <p id="errorClave" class="text-red-500 text-xs mt-1 hidden">Necesitás ingresar una clave.</p>
+            </div>
+            <div id="progresoContenedor" class="mt-4 mb-2 hidden">
+                <div class="flex justify-between mb-1">
+                    <span class="text-xs font-semibold text-emerald-400">Procesando imagen y ocultando el mensaje</span>
+                    <span id="progresoTexto" class="text-xs font-semibold text-emerald-400">0%</span>
+                </div>
+                <div class="w-full bg-gray-700 rounded-full h-2 shadow-inner">
+                    <div id="progresoBarra" class="bg-gradient-to-r from-emerald-500 to-emerald-300 h-2 rounded-full transition-all duration-200 ease-out" style="width: 0%"></div>
+                </div>
+            </div>
+            <div class="flex space-x-3 pt-4">
+                <button type="button" id="btnOcultar"
+                        class="group flex items-center justify-center w-1/2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2.5 rounded-lg transition-colors shadow-lg shadow-emerald-600/20">
+                    
+                    <svg viewBox="0 0 24 24" class="w-5 h-5 mr-2">
+                        <path id="arcoOcultar" d="M7 10 V6 a5 5 0 0 1 10 0 v4" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" pathLength="100" 
+                              class="transition-all duration-700 ease-out [stroke-dasharray:75] group-hover:[stroke-dasharray:100]" />
+                        <rect x="5" y="10" width="14" height="10" rx="2" fill="currentColor" class="transition-transform duration-500 group-hover:scale-[1.05]" />
+                        <circle cx="12" cy="15" r="1.5" fill="#0f172a" />
+                    </svg>
+                    Ocultar
+                </button>
+
+                <button type="button" id="btnRevelar"
+                        class="group flex items-center justify-center w-1/2 bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-2.5 rounded-lg transition-colors shadow-lg shadow-indigo-600/20">
+                    
+                    <svg viewBox="0 0 24 24" class="w-5 h-5 mr-2">
+                        <path id="arcoRevelar" d="M7 10 V6 a5 5 0 0 1 10 0 v4" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" pathLength="100" 
+                              class="transition-all duration-700 ease-out [stroke-dasharray:100] group-hover:[stroke-dasharray:75]" />
+                        <rect x="5" y="10" width="14" height="10" rx="2" fill="currentColor" class="transition-transform duration-500 group-hover:scale-[1.05]" />
+                        <circle cx="12" cy="15" r="1.5" fill="#0f172a" />
+                    </svg>
+                    Revelar
+                </button>
+            </div>
+        </form>
+
+        <div id="resultadoBox" class="mt-8 hidden bg-gray-900/80 border border-gray-600 p-5 rounded-lg text-center shadow-inner">
+        <h3 id="tituloResultado" class="font-bold text-emerald-400 mb-3 text-lg">¡Operación Exitosa!</h3>
+        
+        <p id="textoRecuperado" class="text-gray-200 break-words hidden font-mono bg-gray-800 p-3 rounded border border-gray-700"></p>
+
+        <a id="btnDescargar" href="#" class="inline-flex items-center justify-center mt-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2.5 px-6 rounded-lg transition-colors hidden">
+            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+            Descargar Imagen
+        </a>
+        
+        </div>
+        <div id="modalBackdrop" class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm opacity-0 pointer-events-none transition-opacity duration-300 ease-out">
+        
+            <div id="modalCard" class="bg-gray-800 w-full max-w-md p-8 rounded-2xl shadow-2xl border border-gray-600 transform scale-95 transition-transform duration-300 ease-out mx-4 relative">
+            
+                <button id="btnCerrarModalX" class="absolute top-4 right-4 text-gray-400 hover:text-white transition-colors">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+
+                <h3 class="text-xl font-extrabold mb-5 flex items-center">
+                    <svg class="w-6 h-6 mr-2 text-emerald-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    <span class="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-indigo-400 tracking-wide">
+                        Modo de Uso
+                    </span>
+                </h3>
+            
+                <div class="space-y-4 text-sm text-gray-300 leading-relaxed">
+                    <p>
+                        <strong class="text-emerald-400">1. Para Ocultar:</strong> Selecciona o arrastra una imagen, escribe el mensaje que quieras guardar y define una contraseña. Al presionar <em>Ocultar</em>, se descargará una nueva imagen PNG que parece idéntica pero contiene tu mensaje cifrado adentro.
+                    </p>
+                    <p>
+                        <strong class="text-indigo-400">2. Para Revelar:</strong> Carga la imagen descargada, escribe la misma contraseña y presiona <em>Revelar</em> para recuperar el texto original en cualquier momento.
+                    </p>
+                </div>
+
+                <button id="btnCerrarModal" class="mt-6 w-full bg-gray-700 hover:bg-gray-600 text-white font-bold py-2.5 rounded-lg transition-colors border border-gray-600 hover:border-gray-500 shadow-lg">
+                Entendido
+                </button>
+            </div>
+        </div>
+    </div>
+    <script src="app.js?v=3"></script>
+</body>
+</html>
