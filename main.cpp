@@ -167,7 +167,13 @@ int main() {
         cout << "[+] Mensaje revelado.\n";
     });
 
-    cout << "Servidor activo en http://localhost:8080" << endl;
-    servidor.listen("0.0.0.0", 8080);
+    int puerto = 8080;
+    const char* env_p = getenv("PORT");
+    if (env_p != nullptr) {
+        puerto = atoi(env_p);
+    }
+
+    cout << "Servidor activo en el puerto " << puerto << endl;
+    servidor.listen("0.0.0.0", puerto);
     return 0;
 }

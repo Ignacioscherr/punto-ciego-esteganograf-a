@@ -299,7 +299,7 @@ btnOcultar.addEventListener('click', () => {
         progresoTexto.innerText = progreso + '%';
     }, 100);
 
-    fetch('http://127.0.0.1:8080/ocultar', {
+    fetch('/ocultar', {
         method: 'POST',
         headers: {
             'X-Mensaje': encodeURIComponent(mensaje), 
@@ -366,7 +366,7 @@ btnRevelar.addEventListener('click', () => {
 
     const foto = imagenInput.files[0];
 
-    fetch('http://127.0.0.1:8080/revelar', {
+    fetch('/revelar', {
         method: 'POST',
         headers: {
             'X-Clave': encodeURIComponent(clave)
