@@ -56,6 +56,7 @@ string procesar_esteganografia(const string& imagen_cruda, string mensaje, const
         byteActual = (byteActual + 8 + salto) % (w * h * c - 8);
     }
     string imagen_procesada = "";
+    stbi_write_png_compression_level = 1; // Nivel 1: Compresión ultra rápida (ideal para CPUs en la nube)
     stbi_write_png_to_func(atajar_bytes, &imagen_procesada, w, h, c, img_data, w * c);
     stbi_image_free(img_data);
     return imagen_procesada;
