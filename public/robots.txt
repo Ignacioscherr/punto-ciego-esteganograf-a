@@ -1,0 +1,3 @@
+﻿User-agent: *
+Allow: /
+Sitemap: https://puntociego.onrender.com/sitemap.xml
